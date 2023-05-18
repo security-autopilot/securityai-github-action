@@ -60,13 +60,11 @@ for file in files:
         f"{args.base_url}/scan",
         json={"source_code": added_lines},
     )
-    print("response")
-    print(response)
 
     try:
         scan_response = loads(dumps(response.text))
     except JSONDecodeError:
-        error_message = f"SecurityAutopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
+        error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
         fail_from_error = True
         continue
@@ -88,13 +86,13 @@ for file in files:
                 total_vulnerabilities += 1
 
     except Exception as e:
-        error_message = f"SecurityAutopilot: Unable to process the data from {file.filename} and response {scan_response}."
+        error_message = f"Security Autopilot: Unable to process the data from {file.filename} and response {scan_response}."
         handle_error(error_message, error=e)
         fail_from_error = True
         continue
 
 if len(vulnerabilities_above_threshold) > 0:
-    comment = f"SecurityAutopilot: Vulnerabilities above threshold found: {vulnerabilities_above_threshold}\n\n"
+    comment = f"Security Autopilot: Vulnerabilities above threshold found: {vulnerabilities_above_threshold}\n\n"
     for vulnerability in vulnerabilities_above_threshold:
         comment += f"- {vulnerability['title']} - {vulnerability['description']}\n"
 
@@ -102,7 +100,7 @@ if len(vulnerabilities_above_threshold) > 0:
 
 fixes = 0
 for file in files:
-    print(f"Determining potential fixes for file {file.filename}")
+    print(f"Security Autopilot: Determining potential fixes for file {file.filename}")
     response = requests.post(
         f"{args.base_url}/fix",
         json={"source_code": file.patch},
@@ -111,7 +109,7 @@ for file in files:
     try:
         fix_response = loads(dumps(response.text))
     except JSONDecodeError:
-        error_message = f"SecurityAutopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
+        error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
         fail_from_error = True
         continue
@@ -128,7 +126,7 @@ for file in files:
             diff_text = "\n".join(list(diff))
 
             suggestion = (
-                f"SecurityAutopilot: Suggested fix:\n``` suggestion\n{diff_text}\n ```"
+                f"Security Autopilot: Suggested fix:\n``` suggestion\n{diff_text}\n ```"
             )
             if line_number:
                 # Create a review comment with a suggestion at the specified line number
@@ -145,18 +143,18 @@ for file in files:
                 handle_error(suggestion)
             fixes += 1
     except Exception as e:
-        error_message = f"SecurityAutopilot: Unable to parse JSON response from the server for file {file.filename} response {fix_response}."
+        error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {fix_response}."
         handle_error(error_message, error=e)
         fail_from_error = True
         continue
 
 print(
-    f"SecurityAutopilot: Finished scanning and fixing. {'No' if total_vulnerabilities == 0 else total_vulnerabilities} total vulnerabilities detected. A total of {fixes} fixes were suggested."
+    f"Security Autopilot: Finished scanning and fixing. {'No' if total_vulnerabilities == 0 else total_vulnerabilities} total vulnerabilities detected. A total of {fixes} fixes were suggested."
 )
 
 if len(vulnerabilities_above_threshold) > 0:
     raise Exception(
-        "SecurityAutopilot: At least one vulnerability with severity greater than the threshold was detected."
+        "Security Autopilot: At least one vulnerability with severity greater than the threshold was detected."
     )
 if fail_from_error:
-    raise Exception("SecurityAutopilot: An error occurred while scanning or fixing.")
+    raise Exception("Security Autopilot: An error occurred while scanning or fixing.")
