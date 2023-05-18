@@ -63,7 +63,7 @@ for file in files:
     )
 
     try:
-        scan_response = loads(dumps(response.text))
+        scan_response = loads(response.text)
     except JSONDecodeError:
         error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
@@ -111,7 +111,7 @@ for file in files:
     )
 
     try:
-        fix_response = loads(dumps(response.text))
+        fix_response = loads(response.text)
     except JSONDecodeError:
         error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
