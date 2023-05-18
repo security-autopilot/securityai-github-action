@@ -63,7 +63,7 @@ for file in files:
     )
 
     try:
-        scan_response = loads(response.text)
+        scan_response = loads(dumps(response.text))
     except JSONDecodeError:
         error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
@@ -71,6 +71,7 @@ for file in files:
         continue
 
     try:
+        scan_response = loads(scan_response)
         vulnerabilities = scan_response["data"]["analysis"]
         for vulnerability_analysis in vulnerabilities:
             vulnerability_list = loads(
@@ -103,6 +104,7 @@ if len(vulnerabilities_above_threshold) > 0:
     handle_error(comment)
 
 fixes = 0
+review_comments = []
 for file in files:
     print(f"Security Autopilot: Determining potential fixes for file {file.filename}")
     response = requests.post(
@@ -139,13 +141,14 @@ for file in files:
 
             if start_line and end_line:
                 # Create a review comment with a suggestion for the specified line range
-                repo.create_pull_review_comment(
-                    pull_request.number,
-                    suggestion,
-                    file.sha,
-                    file.filename,
-                    start_line,
-                )
+
+                review_comment = {
+                    "path": file.filename,
+                    "position": start_line,
+                    "body": suggestion,
+                }
+                review_comments.append(review_comment)
+
                 print(suggestion)
             else:
                 # Create a regular issue comment in the PR
@@ -158,6 +161,12 @@ for file in files:
         traceback.print_exc()
         continue
 
+if len(review_comments) > 0:
+    pull_request.create_review(
+        body="Security Autopilot: Suggested fixes for vulnerabilities.",
+        event="COMMENT",
+        comments=review_comments,
+    )
 print(
     f"Security Autopilot: Finished scanning and fixing. {'No' if total_vulnerabilities == 0 else total_vulnerabilities} total vulnerabilities detected. A total of {fixes} fixes were suggested."
 )
