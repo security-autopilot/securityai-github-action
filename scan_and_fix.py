@@ -79,7 +79,9 @@ for file in files:
 
             for vulnerability in vulnerability_list:
                 if (
-                    severity_values.get(vulnerability["severity"], 0)
+                    severity_values.get(
+                        vulnerability["severity"], 10
+                    )  # when in doubt, display
                     > severity_values[args.threshold]
                 ):
                     vulnerabilities_above_threshold.append(vulnerability)
@@ -96,7 +98,7 @@ for file in files:
 if len(vulnerabilities_above_threshold) > 0:
     comment = f"Security Autopilot: Vulnerabilities above threshold found: {vulnerabilities_above_threshold}\n\n"
     for vulnerability in vulnerabilities_above_threshold:
-        comment += f"- {vulnerability['title']} - {vulnerability['description']}\n"
+        comment += f"- {vulnerability['severity'] - vulnerability['title']} - {vulnerability['description']}\n"
 
     handle_error(comment)
 
