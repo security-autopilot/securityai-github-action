@@ -1,0 +1,28 @@
+name: 'SecurityAI Code Scan and Fix'
+description: 'A GitHub Action that scans and fixes security vulnerabilities in the codebase'
+inputs:
+  GITHUB_TOKEN:
+    description: 'GitHub token for authentication'
+    required: true
+  REPO_NAME:
+    description: 'The name of the repository'
+    required: true
+  BASE_URL:
+    description: 'The base URL for the SecurityAI backend'
+    required: true
+  PR_NUMBER:
+    description: 'The pull request number'
+    required: true
+  THRESHOLD:
+    description: 'The vulnerability threshold'
+    required: true
+    default: 'Low'
+runs:
+  using: 'docker'
+  image: 'Dockerfile'
+  env:
+    GITHUB_TOKEN: ${{ inputs.GITHUB_TOKEN }}
+    REPO_NAME: ${{ inputs.REPO_NAME }}
+    BASE_URL: ${{ inputs.BASE_URL }}
+    PR_NUMBER: ${{ inputs.PR_NUMBER }}
+    THRESHOLD: ${{ inputs.THRESHOLD }}
