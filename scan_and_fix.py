@@ -76,9 +76,10 @@ for file in files:
         print("vulnerabilities")
         print(vulnerabilities)
         for vulnerability_analysis in vulnerabilities:
-            vulnerability_list = vulnerability_analysis["response"]
             print("vulnerability_analysis")
-            print(vulnerability_analysis)
+            print(vulnerability_analysis, type(vulnerability_analysis))
+
+            vulnerability_list = vulnerability_analysis["response"]
             for vulnerability in vulnerability_list:
                 if vulnerability["severity"] > args.threshold:
                     vulnerabilities_above_threshold.append(vulnerability)
