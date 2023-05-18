@@ -71,7 +71,7 @@ for file in files:
         continue
 
     try:
-        scan_response = loads(scan_response)
+        scan_response = loads(dumps(scan_response["data"]))
         vulnerabilities = scan_response["data"]["analysis"]
         for vulnerability_analysis in vulnerabilities:
             vulnerability_list = loads(
