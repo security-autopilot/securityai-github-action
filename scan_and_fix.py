@@ -44,10 +44,12 @@ def extract_added_lines(patch):
     return "\n".join(added_lines)
 
 
-def handle_error(error_message, response=None):
+def handle_error(error_message, response=None, error=None):
     print(error_message)
     if response is not None:
         print(f"Response content: {response.content}")
+    if error:
+        print(f"Error: {error}")
     pull_request.create_issue_comment(error_message)
 
 
@@ -63,8 +65,6 @@ for file in files:
 
     try:
         scan_response = loads(dumps(response.text))
-        print("scan_response")
-        print(scan_response)
     except JSONDecodeError:
         error_message = f"SecurityAutopilot: Unable to parse JSON response from the server for file {file.filename} response {response}."
         handle_error(error_message, response)
@@ -73,32 +73,32 @@ for file in files:
 
     try:
         vulnerabilities = scan_response["data"]["analysis"]
-        print("vulnerabilities")
-        print(vulnerabilities)
         for vulnerability_analysis in vulnerabilities:
-            print("vulnerability_analysis")
-            print(vulnerability_analysis, type(vulnerability_analysis))
+            vulnerability_list = loads(
+                vulnerability_analysis["response"]
+            )  # hack, the response here should be a dict. API returns a string bug.
 
-            vulnerability_list = vulnerability_analysis["response"]
             for vulnerability in vulnerability_list:
-                if vulnerability["severity"] > args.threshold:
+                if (
+                    severity_values.get(vulnerability["severity"], 0)
+                    > severity_values[args.threshold]
+                ):
                     vulnerabilities_above_threshold.append(vulnerability)
 
                 total_vulnerabilities += 1
 
     except Exception as e:
-        print("exception")
-        print(e)
         error_message = f"SecurityAutopilot: Unable to process the data from {file.filename} and response {scan_response}."
-        handle_error(error_message)
+        handle_error(error_message, error=e)
         fail_from_error = True
         continue
 
-comment = f"SecurityAutopilot: Vulnerabilities above threshold found: {'None' if len(vulnerabilities_above_threshold) == 0 else vulnerabilities_above_threshold}\n\n"
-for vulnerability in vulnerabilities_above_threshold:
-    comment += f"- {vulnerability['title']} - {vulnerability['description']}\n"
+if len(vulnerabilities_above_threshold) > 0:
+    comment = f"SecurityAutopilot: Vulnerabilities above threshold found: {vulnerabilities_above_threshold}\n\n"
+    for vulnerability in vulnerabilities_above_threshold:
+        comment += f"- {vulnerability['title']} - {vulnerability['description']}\n"
 
-handle_error(comment)
+    handle_error(comment)
 
 fixes = 0
 for file in files:
@@ -145,10 +145,8 @@ for file in files:
                 handle_error(suggestion)
             fixes += 1
     except Exception as e:
-        print("exception line 146")
-        print(e)
         error_message = f"SecurityAutopilot: Unable to parse JSON response from the server for file {file.filename} response {fix_response}."
-        handle_error(error_message)
+        handle_error(error_message, error=e)
         fail_from_error = True
         continue
 
