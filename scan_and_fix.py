@@ -98,7 +98,7 @@ for file in files:
 if len(vulnerabilities_above_threshold) > 0:
     comment = f"Security Autopilot: Vulnerabilities above threshold found: {vulnerabilities_above_threshold}\n\n"
     for vulnerability in vulnerabilities_above_threshold:
-        comment += f"- {vulnerability['severity'] - vulnerability['title']} - {vulnerability['description']}\n"
+        comment += f"- {vulnerability['severity']} - {vulnerability['title']} - {vulnerability['description']}\n"
 
     handle_error(comment)
 
