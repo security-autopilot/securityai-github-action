@@ -118,7 +118,8 @@ for file in files:
         for analysis in fix_response["data"]["analysis"]:
             original_code = analysis["chunk"]
             fixed_code = analysis["response"]
-            line_number = analysis.get("line_number", None)
+            start_line = analysis.get("start_line", None)
+            end_line = analysis.get("end_line", None)
 
             diff = difflib.unified_diff(
                 original_code.splitlines(), fixed_code.splitlines(), lineterm=""
@@ -126,16 +127,20 @@ for file in files:
             diff_text = "\n".join(list(diff))
 
             suggestion = (
-                f"Security Autopilot: Suggested fix:\n``` suggestion\n{diff_text}\n ```"
+                f"Security Autopilot: Suggested fix:\n"
+                f"```suggestion:-{start_line},{end_line}+{start_line},{end_line}\n"
+                f"{fixed_code}\n"
+                f"```\n"
             )
-            if line_number:
-                # Create a review comment with a suggestion at the specified line number
+
+            if start_line and end_line:
+                # Create a review comment with a suggestion for the specified line range
                 repo.create_pull_review_comment(
                     pull_request.number,
                     suggestion,
                     file.sha,
                     file.filename,
-                    line_number,
+                    start_line,
                 )
                 print(suggestion)
             else:
