@@ -5,6 +5,7 @@ import difflib
 import argparse
 import re
 from json import JSONDecodeError, dumps, loads
+import traceback
 
 
 parser = argparse.ArgumentParser()
@@ -89,6 +90,7 @@ for file in files:
         error_message = f"Security Autopilot: Unable to process the data from {file.filename} and response {scan_response}."
         handle_error(error_message, error=e)
         fail_from_error = True
+        traceback.print_exc()
         continue
 
 if len(vulnerabilities_above_threshold) > 0:
@@ -151,6 +153,7 @@ for file in files:
         error_message = f"Security Autopilot: Unable to parse JSON response from the server for file {file.filename} response {fix_response}."
         handle_error(error_message, error=e)
         fail_from_error = True
+        traceback.print_exc()
         continue
 
 print(
